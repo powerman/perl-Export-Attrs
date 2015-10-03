@@ -1,27 +1,35 @@
  package Perl6::Export::Attrs;
 
-use version; $VERSION = qv('0.0.3');
+our $VERSION = '0.000004';
 
 use warnings;
 use strict;
 use Carp;
 use Attribute::Handlers;
+use PadWalker qw( var_name peek_my );
+
+my %IMPORT_for;
 
 sub import {
     my $caller = caller;
     no strict 'refs';
     *{$caller.'::import'} = \&_generic_import;
-    *{$caller.'::MODIFY_CODE_ATTRIBUTES'} = \&_generic_MCA;
+    *{$caller.'::IMPORT'} = sub (&) { $IMPORT_for{$caller} = shift };
+    for my $var_type (qw( SCALAR ARRAY HASH CODE )) {
+        *{$caller.'::MODIFY_'.$var_type.'_ATTRIBUTES'} = \&_generic_handler;
+    }
     return;
 }
 
 my %tagsets_for;
 my %is_exported_from;
 my %named_tagsets_for;
+my %decl_loc_for;
+my %name_of;
 
 my $IDENT = '[^\W\d]\w*';
 
-sub _generic_MCA {
+sub _generic_handler {
     my ($package, $referent, @attrs) = @_;
 
     ATTR:
@@ -32,7 +40,7 @@ sub _generic_MCA {
 
         my @tagsets = grep {length $_} split m/ \s+,?\s* | ,\s* /xms, $attr;
 
-        my (undef, $file, $line) = caller();
+        my (undef, $file, $line) = caller(1);
         $file =~ s{.*/}{}xms;
 
         if (my @bad_tags = grep {!m/\A :$IDENT \z/xms} @tagsets) {
@@ -49,11 +57,44 @@ sub _generic_MCA {
         push @{ $tagsets->{':ALL'} }, $referent;
 
         $is_exported_from{$package}{$referent} = 1;
+        $decl_loc_for{$referent} = "$file line $line";
+        $name_of{$referent} = _get_lexical_name($referent);
 
-        undef $attr
+        undef $attr;
+
     }
 
     return grep {defined $_} @attrs;
+}
+
+my %desc_for = (
+    SCALAR => 'lexical scalar variable',
+    ARRAY  => 'lexical array variable',
+    HASH   => 'lexical hash variable',
+    CODE   => 'anonymous subroutine',
+);
+
+my %hint_for = (
+    SCALAR => "(declare the variable with 'our' instead of 'my')",
+    ARRAY  => "(declare the variable with 'our' instead of 'my')",
+    HASH   => "(declare the variable with 'our' instead of 'my')",
+    CODE   => "(specify a name after the 'sub' keyword)",
+);
+
+sub _get_lexical_name {
+    my ($var_ref) = @_;
+    return if ref $var_ref eq 'CODE';
+
+    SEARCH:
+    for my $up_level (1..(~0>>1)-1) {
+        my $sym_tab_ref = eval { peek_my($up_level) }
+            or last SEARCH;
+
+        for my $var_name (keys %{$sym_tab_ref}) {
+            return $var_name if $var_ref == $sym_tab_ref->{$var_name};
+        }
+    }
+    return;
 }
 
 sub _invert_tagset {
@@ -62,14 +103,22 @@ sub _invert_tagset {
 
     for my $tag (keys %{$tagset}) {
         for my $sub_ref (@{$tagset->{$tag}}) {
-            my $sym = Attribute::Handlers::findsym($package, $sub_ref, 'CODE')
-                or die "Internal error: missing symbol for $sub_ref";
-            $inverted_tagset{$tag}{*{$sym}{NAME}} = $sub_ref;;
+            my $type = ref $sub_ref;
+            my $sym = Attribute::Handlers::findsym($package, $sub_ref, $type)
+                   || $name_of{$sub_ref}
+                or die "Can't export $desc_for{$type} ",
+                       "at $decl_loc_for{$sub_ref}\n$hint_for{$type}\n";
+            if (ref $sym) {
+                $sym = *{$sym}{NAME};
+            }
+            $inverted_tagset{$tag}{$sym} = $sub_ref;
         }
     }
 
     return \%inverted_tagset;
 }
+
+my %type_for = qw( $ SCALAR   @ ARRAY   % HASH );
 
 # Reusable import() subroutine for all packages...
 sub _generic_import {
@@ -84,18 +133,37 @@ sub _generic_import {
     my $errors;
 
     my %request;
-    my @pass_on_list;
     my $subs_ref;
 
+    my $args_supplied = @_;
+
+    my $argno = 0;
     REQUEST:
-    for my $request (@_) {
-        if (my ($sub_name) = $request =~ m/\A &? ($IDENT) (?:\(\))? \z/xms) {
-            next REQUEST if exists $request{$sub_name};
+    while ($argno < @_) {
+        my $request = $_[$argno];
+        if (my ($sub_name) = $request =~ m/\A & ($IDENT) (?:\(\))? \z/xms) {
+            if (exists $request{$sub_name}) {
+                splice @_, $argno, 1;
+                next REQUEST;
+            }
             no strict 'refs';
             no warnings 'once';
             if (my $sub_ref = *{$package.'::'.$sub_name}{CODE}) {
                 if ($is_exported->{$sub_ref}) {
                     $request{$sub_name} = $sub_ref;
+                    splice @_, $argno, 1;
+                    next REQUEST;
+                }
+            }
+        }
+        elsif (my ($sigil, $name) = $request =~ m/\A ([\$\@%])($IDENT) \z/xms) {
+            next REQUEST if exists $request{$sigil.$name};
+            no strict 'refs';
+            no warnings 'once';
+            if (my $var_ref = *{$package.'::'.$name}{$type_for{$sigil}}) {
+                if ($is_exported->{$var_ref}) {
+                    $request{$sigil.$name} = $var_ref;
+                    splice @_, $argno, 1;
                     next REQUEST;
                 }
             }
@@ -103,22 +171,20 @@ sub _generic_import {
         elsif ($request =~ m/\A :$IDENT \z/xms
                and $subs_ref = $tagset->{$request}) {
             @request{keys %{$subs_ref}} = values %{$subs_ref};
+            splice @_, $argno, 1;
             next REQUEST;
         }
         $errors .= " $request";
-        push @pass_on_list, $request;
+        $argno++;
     }
 
     # Report unexportable requests...
-    my $real_import = do{
-        no strict 'refs';
-        no warnings 'once';
-        *{$package.'::IMPORT'}{CODE};
-    };
+    my $real_import = $IMPORT_for{$package};
+    
     croak "$package does not export:$errors\nuse $package failed"
         if $errors && !$real_import;
 
-    if (!@_) {
+    if (!$args_supplied) {
         %request = %{$tagset->{':DEFAULT'}||={}}
     }
 
@@ -126,12 +192,21 @@ sub _generic_import {
     @request{ keys %{$mandatory} } = values %{$mandatory};
 
     my $caller = caller;
+
     for my $sub_name (keys %request) {
         no strict 'refs';
-        *{$caller.'::'.$sub_name} = $request{$sub_name};
+        my ($sym_name) = $sub_name =~ m{\A [\$\@&%]? (.*)}xms;
+        *{$caller.'::'.$sym_name} = $request{$sub_name};
     }
 
-    goto &{$real_import} if $real_import;
+    if ($real_import) {
+        my $idx=0;
+        while ($idx < @_) {
+            if (defined $_[$idx]) { $idx++             }
+            else                  { splice @_, $idx, 1 }
+        }
+        goto &{$real_import};
+    }
     return;
 }
 
@@ -145,58 +220,68 @@ Perl6::Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
 
 =head1 VERSION
 
-This document describes Perl6::Export::Attrs version 0.0.3
+This document describes Perl6::Export::Attrs version 0.000004
 
 
 =head1 SYNOPSIS
 
-	package Some::Module;
+    package Some::Module;
     use Perl6::Export::Attrs;
 
-	# Export &foo by default, when explicitly requested,
-	# or when the ':ALL' export set is requested...
+    # Export &foo by default, when explicitly requested,
+    # or when the ':ALL' export set is requested...
 
-	sub foo :Export(:DEFAULT) {
-		print "phooo!";
-	}
-
-
-	# Export &var by default, when explicitly requested,
-	# or when the ':bees', ':pubs', or ':ALL' export set is requested...
-	# the parens after 'is export' are like the parens of a qw(...)
-
-	sub bar :Export(:DEFAULT :bees :pubs) {
-		print "baaa!";
-	}
-
-
-	# Export &baz when explicitly requested
-	# or when the ':bees' or ':ALL' export set is requested...
-
-	sub baz :Export(:bees) {
-		print "baassss!";
-	}
-
-
-	# Always export &qux 
-	# (no matter what else is explicitly or implicitly requested)
-
-	sub qux :Export(:MANDATORY) {
-		print "quuuuuuuuux!";
-	}
-
-
-	IMPORT {
-		# This block is called when the module is used (as usual),
-		# but it is called after any export requests have been handled.
-		# Those requests will have been stripped from its @_ argument list
+    sub foo :Export(:DEFAULT) {
+        print "phooo!";
     }
+
+
+    # Export &var by default, when explicitly requested,
+    # or when the ':bees', ':pubs', or ':ALL' export set is requested...
+    # the parens after 'is export' are like the parens of a qw(...)
+
+    sub bar :Export(:DEFAULT :bees :pubs) {
+        print "baaa!";
+    }
+
+
+    # Export &baz when explicitly requested
+    # or when the ':bees' or ':ALL' export set is requested...
+
+    sub baz :Export(:bees) {
+        print "baassss!";
+    }
+
+
+    # Always export &qux 
+    # (no matter what else is explicitly or implicitly requested)
+
+    sub qux :Export(:MANDATORY) {
+        print "quuuuuuuuux!";
+    }
+
+
+    # Allow the constant $PI to be exported when requested...
+
+    use Readonly;
+    Readonly our $PI :Export => 355/113;
+
+
+    # Allow the variable $EPSILON to be always exported...
+
+    our $EPSILON :Export( :MANDATORY ) = 0.00001;
+
+
+    sub IMPORT {
+        # This subroutine is called when the module is used (as usual),
+        # but it is called after any export requests have been handled.
+    };
 
 
 =head1 DESCRIPTION
 
 Implements a Perl 5 native version of what the Perl 6 symbol export mechanism
-will look like.
+will look like (with some unavoidable restrictions).
 
 It's very straightforward:
 
@@ -204,27 +289,27 @@ It's very straightforward:
 
 =item *
 
-If you want a subroutine to be capable of being exported (when
-explicitly requested in the C<use> arguments), you mark it
-with the C<:Export> attribute.
+If you want a subroutine or package variable to be capable of being exported
+(when explicitly requested in the C<use> arguments), you mark it with
+the C<:Export> attribute.
 
 =item *
 
-If you want a subroutine to be automatically exported when the module is
-used (without specific overriding arguments), you mark it with
-the C<:Export(:DEFAULT)> attribute.
+If you want a subroutine or package variable to be automatically exported when
+the module is used (without specific overriding arguments), you mark it
+with the C<:Export(:DEFAULT)> attribute.
 
 =item *
 
-If you want a subroutine to be automatically exported when the module is
-used (even if the user specifies overriding arguments), you mark it with
-the C<:Export(:MANDATORY)> attribute.
+If you want a subroutine or package variable to be automatically exported when
+the module is used (even if the user specifies overriding arguments),
+you mark it with the C<:Export(:MANDATORY)> attribute.
 
 =item * 
 
-If the subroutine should also be exported when particular export groups
-are requested, you add the names of those export groups to the attribute's
-argument list.
+If the subroutine or package variable should also be exported when particular
+export groups are requested, you add the names of those export groups to
+the attribute's argument list.
 
 =back
 
@@ -237,11 +322,12 @@ analogous to a C<BEGIN> or C<END> block, except that it's executed every
 time the corresponding module is C<use>'d. 
 
 The C<IMPORT> block is passed the argument list that was specified on
-the C<use> line that loaded the corresponding module. However, any
-export specifications (names of subroutines or tagsets to be exported)
-will have already been removed from that argument list before
-C<IMPORT> receives it.
+the C<use> line that loaded the corresponding module, minus the
+arguments that were used to specify exports.
 
+Note that, due to limitations in Perl 5, the C<IMPORT> block provided by this
+module must be terminated by a semi-colon, unless it is the last statement in
+the file.
 
 =head1 DIAGNOSTICS
 
@@ -249,20 +335,30 @@ C<IMPORT> receives it.
 
 =item %s does not export: %s\nuse %s failed
 
-You tried to import the specified subroutine, but the module didn't
-export it. Often caused by a misspelling, or forgetting to add an
-C<:Export> attribute to the definition of the subroutine in question.
+You tried to import the specified subroutine or package variable, but
+the module didn't export it. Often caused by a misspelling, or
+forgetting to add an C<:Export> attribute to the definition of the
+subroutine or variable in question.
 
 =item Bad tagset in :Export attribute at %s line %s: [%s]
 
-You tried to import a collection of subroutines via a tagset, but the module
-didn't export any subroutines under that tagset. Is the tagset name misspelled
-(maybe you forgot the colon?).
+You tried to import a collection of items via a tagset, but the module
+didn't export any subroutines under that tagset. Is the tagset name
+misspelled (maybe you forgot the colon?).
 
-=item Internal error: missing symbol for %s
+=item Can't export lexical %s variable at %s
 
-A subroutine was specified as being exported during module compilation
-but mysteriously ceased to exist before the module was imported. 
+The module can only export package variables. You applied the C<:Export>
+marker to a non-package variable (almost certainly to a lexical). Change
+the variable's C<my> declarator to an C<our>.
+
+=item Can't export anonymous subroutine at %s
+
+Although you I<can> apply the C<:Export> marker to an anonymous subroutine,
+it rarely makes any sense to do so, since that subroutine can't be
+exported without a name to export it as. Either give the subroutine a
+name, or make sure it's aliased to a named typeglob at compile-time (or,
+at least, before it's exported).
 
 =back
 
@@ -279,15 +375,23 @@ This module requires the Attribute::Handlers module to handle the attributes.
 
 =head1 INCOMPATIBILITIES
 
-None reported.
+This module cannot be used with the Memoize CPAN module,
+because memoization replaces the original subroutine
+with a wrapper. Because the C<:Export> attribute is 
+applied to the original (not the wrapper), the memoized
+wrapper is not found by the exporter mechanism.
 
 
 =head1 BUGS AND LIMITATIONS
 
 No bugs have been reported.
-Note that the module does not support exporting variables.
-This is considered a I<feature>, not a bug. See Chapter 17 of
-Perl Best Practices (O'Reilly, 2005).
+
+Note that the module does not support exporting lexical variables,
+since there is no way for the exporter mechanism to determine the name
+of a lexical and hence to export it.
+
+Nor does this module support the numerous addition export modes that
+Perl 6 offers, such as export-as-lexical or export-as-state.
 
 Please report any bugs or feature requests to
 C<bug-perl6-export-attrs@rt.cpan.org>, or through the web interface at
