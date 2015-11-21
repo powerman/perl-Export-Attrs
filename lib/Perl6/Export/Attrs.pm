@@ -141,7 +141,7 @@ sub _generic_import {
     REQUEST:
     while ($argno < @_) {
         my $request = $_[$argno];
-        if (my ($sub_name) = $request =~ m/\A & ($IDENT) (?:\(\))? \z/xms) {
+        if (my ($sub_name) = $request =~ m/\A &? ($IDENT) (?:\(\))? \z/xms) {
             if (exists $request{$sub_name}) {
                 splice @_, $argno, 1;
                 next REQUEST;
