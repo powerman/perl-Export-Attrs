@@ -9,9 +9,10 @@ WriteMakefile(
     ABSTRACT_FROM       => 'lib/Perl6/Export/Attrs.pm',
     PL_FILES            => {},
     PREREQ_PM => {
-        'Test::More' => 0,
-        'version'    => 0,
+        'Test::More'          => 0,
+        'version'             => 0,
         'Attribute::Handlers' => 0,
+        'PadWalker'           => 0,
     },
     dist                => { COMPRESS => 'gzip -9f', SUFFIX => 'gz', },
     clean               => { FILES => 'Perl6-Export-Attrs-*' },

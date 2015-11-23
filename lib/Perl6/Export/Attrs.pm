@@ -1,6 +1,6 @@
  package Perl6::Export::Attrs;
 
-our $VERSION = '0.000004';
+our $VERSION = '0.000005';
 
 use warnings;
 use strict;
@@ -220,7 +220,7 @@ Perl6::Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
 
 =head1 VERSION
 
-This document describes Perl6::Export::Attrs version 0.000004
+This document describes Perl6::Export::Attrs version 0.000005
 
 
 =head1 SYNOPSIS

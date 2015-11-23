@@ -19,6 +19,7 @@ no_index:
     - inc
 requires:
   Attribute::Handlers: '0'
+  PadWalker: '0'
   Test::More: '0'
   version: '0'
-version: '0.000004'
+version: '0.000005'

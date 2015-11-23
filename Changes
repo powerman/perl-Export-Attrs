@@ -27,3 +27,9 @@ Revision history for Perl6-Export-Attrs
 
     * Included META files
       (thanks Jarkko)
+
+
+0.000005  Tue Nov 24 09:16:01 2015
+
+    * Added dependency for PadWalker 
+      (thanks Dave!)
