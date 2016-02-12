@@ -1,6 +1,6 @@
 package Export::Attrs;
 
-our $VERSION = '0.000005';
+our $VERSION = 'v0.1.0';
 
 use warnings;
 use strict;
@@ -213,6 +213,8 @@ sub _generic_import {
 1; # Magic true value required at end of module
 __END__
 
+=encoding utf8
+
 =head1 NAME
 
 Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
@@ -279,6 +281,9 @@ This document describes Export::Attrs version 0.000005
 
 
 =head1 DESCRIPTION
+
+B<NOTE:> This module is a fork of L<Perl6::Export::Attrs> created to
+restore compatibility with Perl6::Export::Attrs version 0.0.3.
 
 Implements a Perl 5 native version of what the Perl 6 symbol export mechanism
 will look like (with some unavoidable restrictions).
@@ -382,9 +387,7 @@ applied to the original (not the wrapper), the memoized
 wrapper is not found by the exporter mechanism.
 
 
-=head1 BUGS AND LIMITATIONS
-
-No bugs have been reported.
+=head1 LIMITATIONS
 
 Note that the module does not support exporting lexical variables,
 since there is no way for the exporter mechanism to determine the name
@@ -393,47 +396,67 @@ of a lexical and hence to export it.
 Nor does this module support the numerous addition export modes that
 Perl 6 offers, such as export-as-lexical or export-as-state.
 
-Please report any bugs or feature requests to
-C<bug-export-attrs@rt.cpan.org>, or through the web interface at
-L<http://rt.cpan.org>.
+
+=head1 SUPPORT
+
+=head2 Bugs / Feature Requests
+
+Please report any bugs or feature requests through the issue tracker
+at L<https://github.com/powerman/perl-Export-Attrs/issues>.
+You will be notified automatically of any progress on your issue.
+
+=head2 Source Code
+
+This is open source software. The code repository is available for
+public review and contribution under the terms of the license.
+Feel free to fork the repository and submit pull requests.
+
+L<https://github.com/powerman/perl-Export-Attrs>
+
+    git clone https://github.com/powerman/perl-Export-Attrs.git
+
+=head2 Resources
+
+=over
+
+=item * MetaCPAN Search
+
+L<https://metacpan.org/search?q=Export-Attrs>
+
+=item * CPAN Ratings
+
+L<http://cpanratings.perl.org/dist/Export-Attrs>
+
+=item * AnnoCPAN: Annotated CPAN documentation
+
+L<http://annocpan.org/dist/Export-Attrs>
+
+=item * CPAN Testers Matrix
+
+L<http://matrix.cpantesters.org/?dist=Export-Attrs>
+
+=item * CPANTS: A CPAN Testing Service (Kwalitee)
+
+L<http://cpants.cpanauthors.org/dist/Export-Attrs>
+
+=back
 
 
 =head1 AUTHOR
 
-Damian Conway  C<< <DCONWAY@cpan.org> >>
+Alex Efros E<lt>powerman@cpan.orgE<gt>
 
-Alex Efros C<< powerman@cpan.org >>
+Damian Conway E<lt>DCONWAY@cpan.orgE<gt>
 
 
-=head1 LICENCE AND COPYRIGHT
+=head1 COPYRIGHT AND LICENSE
 
-Copyright (c) 2005,2015 Damian Conway C<< <DCONWAY@cpan.org> >>. All rights reserved.
+This software is Copyright (c) 2016 by Alex Efros E<lt>powerman@cpan.orgE<gt>.
 
-Copyright (c) 2016 Alex Efros C<< powerman@cpan.org >>. All rights reserved.
+Copyright (c) 2005,2015 Damian Conway E<lt>DCONWAY@cpan.orgE<gt>. All rights reserved.
 
 This module is free software; you can redistribute it and/or
 modify it under the same terms as Perl itself.
 
 
-=head1 DISCLAIMER OF WARRANTY
-
-BECAUSE THIS SOFTWARE IS LICENSED FREE OF CHARGE, THERE IS NO WARRANTY
-FOR THE SOFTWARE, TO THE EXTENT PERMITTED BY APPLICABLE LAW. EXCEPT WHEN
-OTHERWISE STATED IN WRITING THE COPYRIGHT HOLDERS AND/OR OTHER PARTIES
-PROVIDE THE SOFTWARE "AS IS" WITHOUT WARRANTY OF ANY KIND, EITHER
-EXPRESSED OR IMPLIED, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
-WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE. THE
-ENTIRE RISK AS TO THE QUALITY AND PERFORMANCE OF THE SOFTWARE IS WITH
-YOU. SHOULD THE SOFTWARE PROVE DEFECTIVE, YOU ASSUME THE COST OF ALL
-NECESSARY SERVICING, REPAIR, OR CORRECTION.
-
-IN NO EVENT UNLESS REQUIRED BY APPLICABLE LAW OR AGREED TO IN WRITING
-WILL ANY COPYRIGHT HOLDER, OR ANY OTHER PARTY WHO MAY MODIFY AND/OR
-REDISTRIBUTE THE SOFTWARE AS PERMITTED BY THE ABOVE LICENCE, BE
-LIABLE TO YOU FOR DAMAGES, INCLUDING ANY GENERAL, SPECIAL, INCIDENTAL,
-OR CONSEQUENTIAL DAMAGES ARISING OUT OF THE USE OR INABILITY TO USE
-THE SOFTWARE (INCLUDING BUT NOT LIMITED TO LOSS OF DATA OR DATA BEING
-RENDERED INACCURATE OR LOSSES SUSTAINED BY YOU OR THIRD PARTIES OR A
-FAILURE OF THE SOFTWARE TO OPERATE WITH ANY OTHER SOFTWARE), EVEN IF
-SUCH HOLDER OR OTHER PARTY HAS BEEN ADVISED OF THE POSSIBILITY OF
-SUCH DAMAGES.
+=cut
