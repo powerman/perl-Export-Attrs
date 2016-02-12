@@ -1,4 +1,4 @@
- package Export::Attrs;
+package Export::Attrs;
 
 our $VERSION = '0.000005';
 
@@ -180,7 +180,7 @@ sub _generic_import {
 
     # Report unexportable requests...
     my $real_import = $IMPORT_for{$package};
-    
+
     croak "$package does not export:$errors\nuse $package failed"
         if $errors && !$real_import;
 
@@ -253,7 +253,7 @@ This document describes Export::Attrs version 0.000005
     }
 
 
-    # Always export &qux 
+    # Always export &qux
     # (no matter what else is explicitly or implicitly requested)
 
     sub qux :Export(:MANDATORY) {
@@ -305,7 +305,7 @@ If you want a subroutine or package variable to be automatically exported when
 the module is used (even if the user specifies overriding arguments),
 you mark it with the C<:Export(:MANDATORY)> attribute.
 
-=item * 
+=item *
 
 If the subroutine or package variable should also be exported when particular
 export groups are requested, you add the names of those export groups to
@@ -319,7 +319,7 @@ That's it.
 
 Perl 6 replaces the C<import> subroutine with an C<IMPORT> block. It's
 analogous to a C<BEGIN> or C<END> block, except that it's executed every
-time the corresponding module is C<use>'d. 
+time the corresponding module is C<use>'d.
 
 The C<IMPORT> block is passed the argument list that was specified on
 the C<use> line that loaded the corresponding module, minus the
@@ -377,7 +377,7 @@ This module requires the Attribute::Handlers module to handle the attributes.
 
 This module cannot be used with the Memoize CPAN module,
 because memoization replaces the original subroutine
-with a wrapper. Because the C<:Export> attribute is 
+with a wrapper. Because the C<:Export> attribute is
 applied to the original (not the wrapper), the memoized
 wrapper is not found by the exporter mechanism.
 

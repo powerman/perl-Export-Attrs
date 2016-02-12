@@ -19,7 +19,7 @@ Revision history for Export-Attrs
 
     * Fixed filtering of args to IMPORT block (thanks Smylers)
 
-    * Updated docs to explain the syntactic constraints of the 
+    * Updated docs to explain the syntactic constraints of the
       IMPORT block (thanks Smylers)
 
     * Updated docs to note incompatibility with Memoize.pm
@@ -31,5 +31,5 @@ Revision history for Export-Attrs
 
 0.000005  Tue Nov 24 09:16:01 2015
 
-    * Added dependency for PadWalker 
+    * Added dependency for PadWalker
       (thanks Dave!)
