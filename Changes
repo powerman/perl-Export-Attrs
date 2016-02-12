@@ -1,6 +1,8 @@
 Revision history for Export-Attrs
 
 {{$NEXT}}
+
+v0.1.0  2016-02-12 20:08:54 EET
 	- Based on Perl6::Export::Attrs 0.000005.
 	- Renamed to Export::Attrs.
 	- Migrate to Dist::Milla.

@@ -49,7 +49,7 @@
    "provides" : {
       "Export::Attrs" : {
          "file" : "lib/Export/Attrs.pm",
-         "version" : "v1.0.5"
+         "version" : "v0.1.0"
       }
    },
    "release_status" : "stable",
@@ -64,7 +64,7 @@
          "web" : "https://github.com/powerman/perl-Export-Attrs"
       }
    },
-   "version" : "v1.0.5",
+   "version" : "v0.1.0",
    "x_contributors" : [
       "Damian Conway <damian@conway.org>",
       "Niko Tyni <ntyni@debian.org>"

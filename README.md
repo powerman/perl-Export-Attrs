@@ -7,7 +7,7 @@ Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
 
 # VERSION
 
-This document describes Export::Attrs version 0.000005
+This document describes Export::Attrs version v0.1.0
 
 # SYNOPSIS
 
