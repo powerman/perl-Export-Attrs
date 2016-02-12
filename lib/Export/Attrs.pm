@@ -1,4 +1,4 @@
- package Perl6::Export::Attrs;
+ package Export::Attrs;
 
 our $VERSION = '0.000005';
 
@@ -215,18 +215,18 @@ __END__
 
 =head1 NAME
 
-Perl6::Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
+Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
 
 
 =head1 VERSION
 
-This document describes Perl6::Export::Attrs version 0.000005
+This document describes Export::Attrs version 0.000005
 
 
 =head1 SYNOPSIS
 
     package Some::Module;
-    use Perl6::Export::Attrs;
+    use Export::Attrs;
 
     # Export &foo by default, when explicitly requested,
     # or when the ':ALL' export set is requested...
@@ -365,7 +365,7 @@ at least, before it's exported).
 
 =head1 CONFIGURATION AND ENVIRONMENT
 
-Perl6::Export::Attrs requires no configuration files or environment variables.
+Export::Attrs requires no configuration files or environment variables.
 
 
 =head1 DEPENDENCIES
@@ -394,7 +394,7 @@ Nor does this module support the numerous addition export modes that
 Perl 6 offers, such as export-as-lexical or export-as-state.
 
 Please report any bugs or feature requests to
-C<bug-perl6-export-attrs@rt.cpan.org>, or through the web interface at
+C<bug-export-attrs@rt.cpan.org>, or through the web interface at
 L<http://rt.cpan.org>.
 
 

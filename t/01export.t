@@ -1,7 +1,7 @@
 use Test::More tests => 1;
 
 package Lib;
-use Perl6::Export::Attrs;
+use Export::Attrs;
 sub doit :Export { "Do it!"; }
 1;
 
