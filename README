@@ -30,7 +30,8 @@ None.
 
 COPYRIGHT AND LICENCE
 
-Copyright (C) 2005, Damian Conway
+Copyright (C) 2005,2015 Damian Conway
+Copyright (C) 2016 Alex Efros <powerman@cpan.org>
 
 This library is free software; you can redistribute it and/or modify
 it under the same terms as Perl itself.

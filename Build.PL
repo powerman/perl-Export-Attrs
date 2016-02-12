@@ -5,7 +5,7 @@ use Module::Build;
 my $builder = Module::Build->new(
     module_name         => 'Export::Attrs',
     license             => 'perl',
-    dist_author         => 'Damian Conway <DCONWAY@cpan.org>',
+    dist_author         => 'Alex Efros <powerman@cpan.org>',
     dist_version_from   => 'lib/Export/Attrs.pm',
     requires => {
         'Test::More' => 0,
