@@ -224,6 +224,7 @@ Export::Attrs - The Perl 6 'is export(...)' trait as a Perl 5 attribute
 
 This document describes Export::Attrs version v0.1.0
 
+
 =head1 SYNOPSIS
 
     package Some::Module;
