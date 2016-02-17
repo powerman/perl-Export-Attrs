@@ -9,3 +9,7 @@ on configure => sub {
 on test => sub {
     requires 'Test::More';
 };
+
+on develop => sub {
+    requires 'Test::Distribution';
+};
